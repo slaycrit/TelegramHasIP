@@ -29,9 +29,9 @@ namespace TelegramHasIP
         static Timer IpTimer;
 
         /// <summary>
-        /// Indicates if the IP has been requested from the Remote Server in the last hour, resets in the following hour
+        /// Used to check if the IP has already been requested on the current day
         /// </summary>
-        static bool IpChecked = false;
+        static int checkDay = 0;
 
 
         #endregion
@@ -102,24 +102,21 @@ namespace TelegramHasIP
         static void TimerCallback(Object o)
         {
             //Check if the IP is at the Default Value or it is 6 in the morning
-            if(!IpChecked && (IP == "0.0.0.0" || DateTime.Now.Hour == 6))
+            if(DateTime.Now.Day != checkDay && (IP == "0.0.0.0" || DateTime.Now.Hour == 6))
             {
                 //Try to get the External IP from the Website
                 if (TryGetIP(out string newIP))
                 {
                     Console.WriteLine($"{DateTime.Now:g} | Get IP: {newIP}");
-                    IpChecked = true;
+                    //Avoid 
+                    if (DateTime.Now.Hour >= 6) checkDay = DateTime.Now.Day;
+                    else checkDay = DateTime.Now.Subtract(new TimeSpan(1, 0, 0, 0)).Day;
                     IP = newIP;
                 }
                 else
                 {
                     Console.WriteLine($"{DateTime.Now:g} | Get IP: Failed");
                 }
-            }
-            else if(DateTime.Now.Hour == 7)
-            {
-                //Reset, so the IP can be checked again the next day
-                IpChecked = false;
             }
         }
 
